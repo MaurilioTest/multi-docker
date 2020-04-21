@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t maurilioferreira/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true maurilioferreira/react-test npm test
+
+after_success:
+  - docker build -t maurilioferreira/multi-client ./client
+  - docker build -t maurilioferreira/multi-nginx ./nginx
+  - docker build -t maurilioferreira/multi-server ./server
+  - docker build -t maurilioferreira/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push maurilioferreira/multi-client
+  - docker push maurilioferreira/multi-nginx
+  - docker push maurilioferreira/multi-server
+  - docker push maurilioferreira/multi-worker
